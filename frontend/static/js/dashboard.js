@@ -233,30 +233,142 @@ class PrintTrackingDashboard {
     }
 
     async loadPrintJobs() {
-        // Placeholder for print jobs loading
-        const section = document.getElementById('print-jobs');
-        section.innerHTML = `
-            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                <h1 class="h2">Print Jobs</h1>
-                <div class="btn-toolbar mb-2 mb-md-0">
-                    <button type="button" class="btn btn-sm btn-primary">
-                        <i class="fas fa-download"></i> Export
+        try {
+            // Load print jobs data
+            const printJobs = await this.fetchWithAuth('/print-jobs?limit=50');
+
+            const section = document.getElementById('print-jobs');
+            section.innerHTML = `
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Print Jobs</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <div class="btn-group me-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="dashboard.refreshPrintJobs()">
+                                <i class="fas fa-sync-alt"></i> Refresh
+                            </button>
+                            <button type="button" class="btn btn-sm btn-primary" onclick="dashboard.exportPrintJobs()">
+                                <i class="fas fa-download"></i> Export CSV
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Search and Filter Controls -->
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <label for="searchUser" class="form-label">Search User</label>
+                                <input type="text" class="form-control" id="searchUser" placeholder="Username or email" onkeyup="dashboard.filterPrintJobs()">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="searchDocument" class="form-label">Document Name</label>
+                                <input type="text" class="form-control" id="searchDocument" placeholder="Document name" onkeyup="dashboard.filterPrintJobs()">
+                            </div>
+                            <div class="col-md-2">
+                                <label for="filterPrinter" class="form-label">Printer</label>
+                                <select class="form-select" id="filterPrinter" onchange="dashboard.filterPrintJobs()">
+                                    <option value="">All Printers</option>
+                                    ${this.getPrinterOptions(printJobs)}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="filterStatus" class="form-label">Status</label>
+                                <select class="form-select" id="filterStatus" onchange="dashboard.filterPrintJobs()">
+                                    <option value="">All Status</option>
+                                    <option value="completed">Completed</option>
+                                    <option value="failed">Failed</option>
+                                    <option value="pending">Pending</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="filterDate" class="form-label">Date Range</label>
+                                <select class="form-select" id="filterDate" onchange="dashboard.filterPrintJobs()">
+                                    <option value="">All Time</option>
+                                    <option value="today">Today</option>
+                                    <option value="week">This Week</option>
+                                    <option value="month">This Month</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Print Jobs Table -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Print Jobs (<span id="jobCount">${printJobs?.length || 0}</span>)</h5>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="autoRefresh" onchange="dashboard.toggleAutoRefresh()">
+                                <label class="form-check-label" for="autoRefresh">Auto-refresh</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0" id="printJobsTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th onclick="dashboard.sortPrintJobs('print_time')" style="cursor: pointer;">
+                                            Date/Time <i class="fas fa-sort"></i>
+                                        </th>
+                                        <th onclick="dashboard.sortPrintJobs('username')" style="cursor: pointer;">
+                                            User <i class="fas fa-sort"></i>
+                                        </th>
+                                        <th onclick="dashboard.sortPrintJobs('document_name')" style="cursor: pointer;">
+                                            Document <i class="fas fa-sort"></i>
+                                        </th>
+                                        <th onclick="dashboard.sortPrintJobs('printer_name')" style="cursor: pointer;">
+                                            Printer <i class="fas fa-sort"></i>
+                                        </th>
+                                        <th onclick="dashboard.sortPrintJobs('total_pages')" style="cursor: pointer;">
+                                            Pages <i class="fas fa-sort"></i>
+                                        </th>
+                                        <th>Type</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="printJobsTableBody">
+                                    ${this.renderPrintJobRows(printJobs)}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Pagination -->
+                <nav aria-label="Print jobs pagination" class="mt-3">
+                    <ul class="pagination justify-content-center" id="printJobsPagination">
+                        <!-- Pagination will be generated by JavaScript -->
+                    </ul>
+                </nav>
+            `;
+
+            // Store original data for filtering
+            this.originalPrintJobs = printJobs || [];
+            this.filteredPrintJobs = [...this.originalPrintJobs];
+            this.currentSort = { field: 'print_time', direction: 'desc' };
+            this.currentPage = 1;
+            this.pageSize = 20;
+
+            // Apply initial sort
+            this.sortPrintJobs('print_time');
+
+        } catch (error) {
+            console.error('Error loading print jobs:', error);
+            const section = document.getElementById('print-jobs');
+            section.innerHTML = `
+                <div class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Error loading print jobs. Please try again.
+                    <button class="btn btn-sm btn-outline-danger ms-2" onclick="dashboard.loadPrintJobs()">
+                        Retry
                     </button>
                 </div>
-            </div>
-            <div class="card">
-                <div class="card-body">
-                    <p class="text-muted">Print jobs interface will be implemented here.</p>
-                    <p>Features:</p>
-                    <ul>
-                        <li>Search and filter print jobs</li>
-                        <li>View job details</li>
-                        <li>Export to CSV/Excel</li>
-                        <li>Real-time updates</li>
-                    </ul>
-                </div>
-            </div>
-        `;
+            `;
+        }
     }
 
     async loadAgents() {
@@ -855,6 +967,457 @@ class PrintTrackingDashboard {
                 }
             }, 5000);
         }
+    }
+
+    // Helper method to get unique printer options for filter dropdown
+    getPrinterOptions(printJobs) {
+        if (!printJobs || printJobs.length === 0) return '';
+
+        const printers = [...new Set(printJobs.map(job => job.printer_name))];
+        return printers.map(printer => `<option value="${printer}">${printer}</option>`).join('');
+    }
+
+    // Render print job table rows
+    renderPrintJobRows(jobs) {
+        if (!jobs || jobs.length === 0) {
+            return '<tr><td colspan="8" class="text-center py-4 text-muted">No print jobs found</td></tr>';
+        }
+
+        const startIndex = (this.currentPage - 1) * this.pageSize;
+        const endIndex = startIndex + this.pageSize;
+        const pageJobs = jobs.slice(startIndex, endIndex);
+
+        return pageJobs.map(job => `
+            <tr>
+                <td>
+                    <div class="fw-medium">${new Date(job.print_time).toLocaleDateString()}</div>
+                    <small class="text-muted">${new Date(job.print_time).toLocaleTimeString()}</small>
+                </td>
+                <td>
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-user-circle me-2 text-muted"></i>
+                        <div>
+                            <div class="fw-medium">${job.username || 'Unknown'}</div>
+                            <small class="text-muted">${job.pc_name || 'Unknown PC'}</small>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <div class="fw-medium">${job.document_name || 'Unknown Document'}</div>
+                    <small class="text-muted">${this.getFileExtension(job.document_name)}</small>
+                </td>
+                <td>
+                    <div class="fw-medium">${job.printer_name}</div>
+                    <small class="text-muted">${job.printer_ip || ''}</small>
+                </td>
+                <td>
+                    <div class="fw-medium">${job.total_pages || job.pages || 0}</div>
+                    <small class="text-muted">
+                        ${job.copies > 1 ? `${job.copies} copies` : '1 copy'}
+                        ${job.is_duplex ? ' • Duplex' : ''}
+                    </small>
+                </td>
+                <td>
+                    <span class="badge ${job.is_color ? 'bg-warning text-dark' : 'bg-secondary'}">
+                        ${job.is_color ? 'Color' : 'B&W'}
+                    </span>
+                </td>
+                <td>
+                    <span class="badge ${this.getStatusBadgeClass(job.status)}">
+                        ${job.status || 'Completed'}
+                    </span>
+                </td>
+                <td>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-primary" onclick="dashboard.viewJobDetails(${job.id})" title="View Details">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="dashboard.downloadJobInfo(${job.id})" title="Download Info">
+                            <i class="fas fa-download"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    // Helper methods
+    getFileExtension(filename) {
+        if (!filename) return '';
+        const ext = filename.split('.').pop().toLowerCase();
+        const icons = {
+            'pdf': 'fa-file-pdf text-danger',
+            'doc': 'fa-file-word text-primary',
+            'docx': 'fa-file-word text-primary',
+            'xls': 'fa-file-excel text-success',
+            'xlsx': 'fa-file-excel text-success',
+            'ppt': 'fa-file-powerpoint text-warning',
+            'pptx': 'fa-file-powerpoint text-warning',
+            'txt': 'fa-file-alt text-muted',
+            'jpg': 'fa-file-image text-info',
+            'jpeg': 'fa-file-image text-info',
+            'png': 'fa-file-image text-info'
+        };
+        const iconClass = icons[ext] || 'fa-file text-muted';
+        return `<i class="fas ${iconClass} me-1"></i>${ext.toUpperCase()}`;
+    }
+
+    getStatusBadgeClass(status) {
+        switch (status?.toLowerCase()) {
+            case 'completed': return 'bg-success';
+            case 'failed': return 'bg-danger';
+            case 'pending': return 'bg-warning text-dark';
+            case 'cancelled': return 'bg-secondary';
+            default: return 'bg-success';
+        }
+    }
+
+    // Filter print jobs based on search criteria
+    filterPrintJobs() {
+        const searchUser = document.getElementById('searchUser')?.value.toLowerCase() || '';
+        const searchDocument = document.getElementById('searchDocument')?.value.toLowerCase() || '';
+        const filterPrinter = document.getElementById('filterPrinter')?.value || '';
+        const filterStatus = document.getElementById('filterStatus')?.value || '';
+        const filterDate = document.getElementById('filterDate')?.value || '';
+
+        this.filteredPrintJobs = this.originalPrintJobs.filter(job => {
+            // User filter
+            const userMatch = searchUser === '' ||
+                (job.username && job.username.toLowerCase().includes(searchUser)) ||
+                (job.pc_name && job.pc_name.toLowerCase().includes(searchUser));
+
+            // Document filter
+            const documentMatch = searchDocument === '' ||
+                (job.document_name && job.document_name.toLowerCase().includes(searchDocument));
+
+            // Printer filter
+            const printerMatch = filterPrinter === '' || job.printer_name === filterPrinter;
+
+            // Status filter
+            const statusMatch = filterStatus === '' || (job.status || 'completed').toLowerCase() === filterStatus;
+
+            // Date filter
+            let dateMatch = true;
+            if (filterDate && job.print_time) {
+                const jobDate = new Date(job.print_time);
+                const now = new Date();
+
+                switch (filterDate) {
+                    case 'today':
+                        dateMatch = jobDate.toDateString() === now.toDateString();
+                        break;
+                    case 'week':
+                        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                        dateMatch = jobDate >= weekAgo;
+                        break;
+                    case 'month':
+                        const monthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+                        dateMatch = jobDate >= monthAgo;
+                        break;
+                }
+            }
+
+            return userMatch && documentMatch && printerMatch && statusMatch && dateMatch;
+        });
+
+        this.currentPage = 1; // Reset to first page when filtering
+        this.updatePrintJobsDisplay();
+    }
+
+    // Sort print jobs
+    sortPrintJobs(field) {
+        if (this.currentSort.field === field) {
+            this.currentSort.direction = this.currentSort.direction === 'asc' ? 'desc' : 'asc';
+        } else {
+            this.currentSort.field = field;
+            this.currentSort.direction = 'desc';
+        }
+
+        this.filteredPrintJobs.sort((a, b) => {
+            let aVal = a[field];
+            let bVal = b[field];
+
+            // Handle different data types
+            if (field === 'print_time') {
+                aVal = new Date(aVal);
+                bVal = new Date(bVal);
+            } else if (field === 'total_pages' || field === 'pages') {
+                aVal = parseInt(aVal) || 0;
+                bVal = parseInt(bVal) || 0;
+            } else if (typeof aVal === 'string') {
+                aVal = aVal.toLowerCase();
+                bVal = bVal.toLowerCase();
+            }
+
+            let result = 0;
+            if (aVal < bVal) result = -1;
+            else if (aVal > bVal) result = 1;
+
+            return this.currentSort.direction === 'asc' ? result : -result;
+        });
+
+        this.updatePrintJobsDisplay();
+    }
+
+    // Update the display after filtering or sorting
+    updatePrintJobsDisplay() {
+        const tbody = document.getElementById('printJobsTableBody');
+        const jobCount = document.getElementById('jobCount');
+
+        if (tbody) {
+            tbody.innerHTML = this.renderPrintJobRows(this.filteredPrintJobs);
+        }
+
+        if (jobCount) {
+            jobCount.textContent = this.filteredPrintJobs.length;
+        }
+
+        this.updatePagination();
+    }
+
+    // Update pagination
+    updatePagination() {
+        const totalJobs = this.filteredPrintJobs.length;
+        const totalPages = Math.ceil(totalJobs / this.pageSize);
+        const pagination = document.getElementById('printJobsPagination');
+
+        if (!pagination || totalPages <= 1) {
+            if (pagination) pagination.innerHTML = '';
+            return;
+        }
+
+        let paginationHTML = '';
+
+        // Previous button
+        paginationHTML += `
+            <li class="page-item ${this.currentPage === 1 ? 'disabled' : ''}">
+                <a class="page-link" href="#" onclick="dashboard.changePage(${this.currentPage - 1})">Previous</a>
+            </li>
+        `;
+
+        // Page numbers
+        for (let i = 1; i <= totalPages; i++) {
+            if (i === 1 || i === totalPages || (i >= this.currentPage - 2 && i <= this.currentPage + 2)) {
+                paginationHTML += `
+                    <li class="page-item ${i === this.currentPage ? 'active' : ''}">
+                        <a class="page-link" href="#" onclick="dashboard.changePage(${i})">${i}</a>
+                    </li>
+                `;
+            } else if (i === this.currentPage - 3 || i === this.currentPage + 3) {
+                paginationHTML += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+            }
+        }
+
+        // Next button
+        paginationHTML += `
+            <li class="page-item ${this.currentPage === totalPages ? 'disabled' : ''}">
+                <a class="page-link" href="#" onclick="dashboard.changePage(${this.currentPage + 1})">Next</a>
+            </li>
+        `;
+
+        pagination.innerHTML = paginationHTML;
+    }
+
+    // Change page
+    changePage(page) {
+        const totalPages = Math.ceil(this.filteredPrintJobs.length / this.pageSize);
+        if (page < 1 || page > totalPages) return;
+
+        this.currentPage = page;
+        this.updatePrintJobsDisplay();
+    }
+
+    // Refresh print jobs
+    async refreshPrintJobs() {
+        this.showLoading();
+        try {
+            await this.loadPrintJobs();
+            this.showAlert('Print jobs refreshed successfully', 'success');
+        } catch (error) {
+            this.showAlert('Error refreshing print jobs', 'danger');
+        } finally {
+            this.hideLoading();
+        }
+    }
+
+    // Toggle auto-refresh
+    toggleAutoRefresh() {
+        const checkbox = document.getElementById('autoRefresh');
+        if (checkbox.checked) {
+            this.autoRefreshInterval = setInterval(() => {
+                this.refreshPrintJobs();
+            }, 30000); // Refresh every 30 seconds
+            this.showAlert('Auto-refresh enabled (30 seconds)', 'info');
+        } else {
+            if (this.autoRefreshInterval) {
+                clearInterval(this.autoRefreshInterval);
+                this.autoRefreshInterval = null;
+            }
+            this.showAlert('Auto-refresh disabled', 'info');
+        }
+    }
+
+    // Export print jobs to CSV
+    exportPrintJobs() {
+        try {
+            const jobs = this.filteredPrintJobs;
+            if (jobs.length === 0) {
+                this.showAlert('No data to export', 'warning');
+                return;
+            }
+
+            // Prepare CSV data
+            const headers = [
+                'Date/Time', 'User', 'PC Name', 'Document Name', 'Printer Name',
+                'Printer IP', 'Total Pages', 'Color Pages', 'Copies', 'Duplex', 'Status'
+            ];
+
+            const csvData = [
+                headers.join(','),
+                ...jobs.map(job => [
+                    `"${new Date(job.print_time).toLocaleString()}"`,
+                    `"${job.username || ''}"`,
+                    `"${job.pc_name || ''}"`,
+                    `"${job.document_name || ''}"`,
+                    `"${job.printer_name || ''}"`,
+                    `"${job.printer_ip || ''}"`,
+                    job.total_pages || job.pages || 0,
+                    job.color_pages || 0,
+                    job.copies || 1,
+                    job.is_duplex ? 'Yes' : 'No',
+                    `"${job.status || 'Completed'}"`
+                ].join(','))
+            ].join('\n');
+
+            // Create and download file
+            const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `print_jobs_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            this.showAlert('Print jobs exported successfully', 'success');
+        } catch (error) {
+            console.error('Export error:', error);
+            this.showAlert('Error exporting print jobs', 'danger');
+        }
+    }
+
+    // View job details modal
+    viewJobDetails(jobId) {
+        const job = this.originalPrintJobs.find(j => j.id === jobId);
+        if (!job) return;
+
+        const modalHtml = `
+            <div class="modal fade" id="jobDetailsModal" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Print Job Details</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Job Information</h6>
+                                    <table class="table table-sm">
+                                        <tr><td><strong>Job ID:</strong></td><td>${job.id}</td></tr>
+                                        <tr><td><strong>Date/Time:</strong></td><td>${new Date(job.print_time).toLocaleString()}</td></tr>
+                                        <tr><td><strong>Status:</strong></td><td><span class="badge ${this.getStatusBadgeClass(job.status)}">${job.status || 'Completed'}</span></td></tr>
+                                        <tr><td><strong>Document:</strong></td><td>${job.document_name || 'Unknown'}</td></tr>
+                                        <tr><td><strong>File Size:</strong></td><td>${job.file_size ? this.formatFileSize(job.file_size) : 'Unknown'}</td></tr>
+                                    </table>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Print Settings</h6>
+                                    <table class="table table-sm">
+                                        <tr><td><strong>Total Pages:</strong></td><td>${job.total_pages || job.pages || 0}</td></tr>
+                                        <tr><td><strong>Color Pages:</strong></td><td>${job.color_pages || 0}</td></tr>
+                                        <tr><td><strong>Copies:</strong></td><td>${job.copies || 1}</td></tr>
+                                        <tr><td><strong>Duplex:</strong></td><td>${job.is_duplex ? 'Yes' : 'No'}</td></tr>
+                                        <tr><td><strong>Color Mode:</strong></td><td>${job.is_color ? 'Color' : 'Black & White'}</td></tr>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-md-6">
+                                    <h6>User Information</h6>
+                                    <table class="table table-sm">
+                                        <tr><td><strong>Username:</strong></td><td>${job.username || 'Unknown'}</td></tr>
+                                        <tr><td><strong>PC Name:</strong></td><td>${job.pc_name || 'Unknown'}</td></tr>
+                                        <tr><td><strong>IP Address:</strong></td><td>${job.client_ip || 'Unknown'}</td></tr>
+                                    </table>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Printer Information</h6>
+                                    <table class="table table-sm">
+                                        <tr><td><strong>Printer Name:</strong></td><td>${job.printer_name || 'Unknown'}</td></tr>
+                                        <tr><td><strong>Printer IP:</strong></td><td>${job.printer_ip || 'Unknown'}</td></tr>
+                                        <tr><td><strong>Driver:</strong></td><td>${job.printer_driver || 'Unknown'}</td></tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" onclick="dashboard.downloadJobInfo(${job.id})">
+                                <i class="fas fa-download"></i> Download Details
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Remove existing modal and add new one
+        const existingModal = document.getElementById('jobDetailsModal');
+        if (existingModal) existingModal.remove();
+
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        const modal = new bootstrap.Modal(document.getElementById('jobDetailsModal'));
+        modal.show();
+    }
+
+    // Download job information
+    downloadJobInfo(jobId) {
+        const job = this.originalPrintJobs.find(j => j.id === jobId);
+        if (!job) return;
+
+        const jobInfo = {
+            jobId: job.id,
+            dateTime: new Date(job.print_time).toLocaleString(),
+            user: job.username,
+            pcName: job.pc_name,
+            document: job.document_name,
+            printer: job.printer_name,
+            printerIp: job.printer_ip,
+            totalPages: job.total_pages || job.pages || 0,
+            colorPages: job.color_pages || 0,
+            copies: job.copies || 1,
+            duplex: job.is_duplex,
+            colorMode: job.is_color,
+            status: job.status || 'Completed'
+        };
+
+        const content = JSON.stringify(jobInfo, null, 2);
+        const blob = new Blob([content], { type: 'application/json' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `print_job_${jobId}_details.json`;
+        link.click();
+    }
+
+    // Helper method to format file size
+    formatFileSize(bytes) {
+        if (!bytes) return 'Unknown';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
 }
 
