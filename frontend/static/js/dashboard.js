@@ -674,12 +674,18 @@ class PrintTrackingDashboard {
             console.error('Error creating user:', error);
             this.showAlert('Error creating user', 'danger');
         }
-    }
-
-    async viewUser(userId) {
+    } async viewUser(userId) {
         try {
             const user = await this.fetchWithAuth(`/users/${userId}`);
-            const history = await this.fetchWithAuth(`/users/${userId}/print-history?limit=10`);
+            let history = null;
+
+            // Try to get print history, but don't fail if it errors
+            try {
+                history = await this.fetchWithAuth(`/users/${userId}/print-history?limit=10`);
+            } catch (error) {
+                console.warn('Could not load print history:', error);
+                history = null;
+            }
 
             // Handle case where history might be null due to API error
             const stats = history?.statistics || {
