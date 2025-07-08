@@ -1,0 +1,125 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Start API Server",
+            "type": "shell",
+            "command": "D:/Printer_Count_Portal/venv/Scripts/python.exe",
+            "args": [
+                "-m",
+                "uvicorn",
+                "backend.main:app",
+                "--reload",
+                "--port",
+                "8000"
+            ],
+            "group": "build",
+            "isBackground": true,
+            "problemMatcher": [],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "Start Web Portal",
+            "type": "shell",
+            "command": "D:/Printer_Count_Portal/venv/Scripts/python.exe",
+            "args": [
+                "-m",
+                "http.server",
+                "8080"
+            ],
+            "group": "build",
+            "isBackground": true,
+            "problemMatcher": [],
+            "options": {
+                "cwd": "${workspaceFolder}/frontend"
+            }
+        },
+        {
+            "label": "Run Tests",
+            "type": "shell",
+            "command": "D:/Printer_Count_Portal/venv/Scripts/python.exe",
+            "args": [
+                "-m",
+                "pytest",
+                "tests/",
+                "-v"
+            ],
+            "group": "test",
+            "problemMatcher": [],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "Format Code",
+            "type": "shell",
+            "command": "D:/Printer_Count_Portal/venv/Scripts/python.exe",
+            "args": [
+                "-m",
+                "black",
+                "backend/",
+                "agent/"
+            ],
+            "group": "build",
+            "problemMatcher": [],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "Lint Code",
+            "type": "shell",
+            "command": "D:/Printer_Count_Portal/venv/Scripts/python.exe",
+            "args": [
+                "-m",
+                "flake8",
+                "backend/",
+                "agent/"
+            ],
+            "group": "build",
+            "problemMatcher": [],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "Database Migration",
+            "type": "shell",
+            "command": "D:/Printer_Count_Portal/venv/Scripts/python.exe",
+            "args": [
+                "-m",
+                "alembic",
+                "upgrade",
+                "head"
+            ],
+            "group": "build",
+            "problemMatcher": [],
+            "options": {
+                "cwd": "${workspaceFolder}/backend"
+            }
+        },
+        {
+            "label": "Build Agent",
+            "type": "shell",
+            "command": "D:/Printer_Count_Portal/venv/Scripts/python.exe",
+            "args": [
+                "build_agent.py"
+            ],
+            "group": "build",
+            "problemMatcher": [],
+            "options": {
+                "cwd": "${workspaceFolder}/agent"
+            }
+        },
+        {
+            "label": "Start Development Environment",
+            "dependsOrder": "parallel",
+            "dependsOn": [
+                "Start API Server",
+                "Start Web Portal"
+            ]
+        }
+    ]
+}

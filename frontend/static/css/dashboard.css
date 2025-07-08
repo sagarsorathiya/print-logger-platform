@@ -1,0 +1,267 @@
+/* Dashboard Styles */
+:root {
+  --sidebar-width: 250px;
+  --primary-color: #0d6efd;
+  --secondary-color: #6c757d;
+  --success-color: #198754;
+  --warning-color: #ffc107;
+  --danger-color: #dc3545;
+  --info-color: #0dcaf0;
+}
+
+body {
+  font-size: 0.875rem;
+  background-color: #f8f9fa;
+}
+
+.navbar-brand {
+  font-weight: bold;
+}
+
+.content-section {
+  padding: 20px;
+  margin-top: 10px;
+}
+
+.content-section.d-none {
+  display: none !important;
+}
+
+/* Statistics Cards */
+.card {
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  border: 1px solid rgba(0, 0, 0, 0.125);
+  border-radius: 0.375rem;
+}
+
+.card-body h2 {
+  font-size: 2rem;
+  font-weight: bold;
+  margin: 0;
+}
+
+.card-title {
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+  opacity: 0.9;
+}
+
+/* Chart containers */
+.chart-container {
+  position: relative;
+  height: 300px;
+}
+
+/* Table styles */
+.table th {
+  border-top: none;
+  font-weight: 600;
+  background-color: #f8f9fa;
+}
+
+.table-responsive {
+  border-radius: 0.375rem;
+}
+
+/* Status badges */
+.status-online {
+  background-color: var(--success-color);
+}
+
+.status-offline {
+  background-color: var(--secondary-color);
+}
+
+.status-error {
+  background-color: var(--danger-color);
+}
+
+/* Print job type badges */
+.print-color {
+  background-color: var(--warning-color);
+  color: #000;
+}
+
+.print-bw {
+  background-color: var(--secondary-color);
+}
+
+.print-duplex {
+  background-color: var(--info-color);
+  color: #000;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .card-body h2 {
+    font-size: 1.5rem;
+  }
+  
+  .content-section {
+    padding: 10px;
+  }
+}
+
+/* Loading states */
+.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* Custom form styles */
+.form-control:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+/* Button styles */
+.btn-outline-secondary:hover {
+  background-color: var(--secondary-color);
+  border-color: var(--secondary-color);
+}
+
+/* Navigation styles */
+.nav-link {
+  transition: all 0.3s ease;
+}
+
+.nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 0.375rem;
+}
+
+.nav-link.active {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 0.375rem;
+}
+
+/* Alert styles */
+.alert {
+  border: none;
+  border-radius: 0.5rem;
+}
+
+.alert-dismissible .btn-close {
+  padding: 0.75rem 1rem;
+}
+
+/* Modal styles */
+.modal-content {
+  border: none;
+  border-radius: 0.5rem;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+/* Print job status indicators */
+.job-status {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-weight: 500;
+}
+
+.job-recent {
+  background-color: #d1ecf1;
+  color: #0c5460;
+}
+
+.job-old {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+/* Animation for loading states */
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.pulse {
+  animation: pulse 1.5s infinite;
+}
+
+/* Filter section */
+.filter-section {
+  background-color: #fff;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.filter-section h6 {
+  margin-bottom: 0.75rem;
+  color: var(--secondary-color);
+  font-weight: 600;
+}
+
+/* Custom scrollbar */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--secondary-color) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: var(--secondary-color);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: var(--primary-color);
+}
+
+/* Toast notifications */
+.toast-container {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1055;
+}
+
+.toast {
+  border: none;
+  border-radius: 0.5rem;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+/* Pagination styles */
+.pagination {
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.page-link {
+  color: var(--primary-color);
+  border-color: #dee2e6;
+}
+
+.page-link:hover {
+  color: #0a58ca;
+  background-color: #e9ecef;
+  border-color: #dee2e6;
+}
+
+.page-item.active .page-link {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}

@@ -1,0 +1,14 @@
+# Windows Print Tracking Agent Requirements
+
+# Core dependencies
+requests>=2.28.0
+WMI>=1.5.1
+pywin32>=306
+
+# Optional: for building executable
+pyinstaller>=5.0
+
+# Development
+pytest>=7.0
+black>=22.0
+flake8>=5.0
