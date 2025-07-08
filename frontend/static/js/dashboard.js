@@ -316,7 +316,7 @@ class PrintTrackingDashboard {
     async loadUsers() {
         try {
             // Get users data
-            const users = await this.fetchWithAuth('/api/v1/users');
+            const users = await this.fetchWithAuth('/users');
 
             const section = document.getElementById('users');
             section.innerHTML = `
@@ -571,7 +571,7 @@ class PrintTrackingDashboard {
         if (status) params.append('is_active', status);
 
         try {
-            const users = await this.fetchWithAuth(`/api/v1/users?${params.toString()}`);
+            const users = await this.fetchWithAuth(`/users?${params.toString()}`);
             document.getElementById('usersTableBody').innerHTML = this.renderUsersTable(users || []);
         } catch (error) {
             console.error('Error filtering users:', error);
@@ -653,7 +653,7 @@ class PrintTrackingDashboard {
         };
 
         try {
-            await this.fetchWithAuth('/api/v1/users/', {
+            await this.fetchWithAuth('/users/', {
                 method: 'POST',
                 body: JSON.stringify(userData)
             });
@@ -671,8 +671,8 @@ class PrintTrackingDashboard {
 
     async viewUser(userId) {
         try {
-            const user = await this.fetchWithAuth(`/api/v1/users/${userId}`);
-            const history = await this.fetchWithAuth(`/api/v1/users/${userId}/print-history?limit=10`);
+            const user = await this.fetchWithAuth(`/users/${userId}`);
+            const history = await this.fetchWithAuth(`/users/${userId}/print-history?limit=10`);
 
             const modalHtml = `
                 <div class="modal fade" id="viewUserModal" tabindex="-1">
@@ -766,7 +766,7 @@ class PrintTrackingDashboard {
         }
 
         try {
-            await this.fetchWithAuth(`/api/v1/users/${userId}/reset-password`, {
+            await this.fetchWithAuth(`/users/${userId}/reset-password`, {
                 method: 'POST',
                 body: JSON.stringify({ new_password: newPassword })
             });
@@ -784,7 +784,7 @@ class PrintTrackingDashboard {
         }
 
         try {
-            await this.fetchWithAuth(`/api/v1/users/${userId}`, {
+            await this.fetchWithAuth(`/users/${userId}`, {
                 method: 'DELETE'
             });
 
@@ -798,7 +798,7 @@ class PrintTrackingDashboard {
 
     async syncLDAPUsers() {
         try {
-            const result = await this.fetchWithAuth('/api/v1/users/ldap/sync', {
+            const result = await this.fetchWithAuth('/users/ldap/sync', {
                 method: 'POST'
             });
 
