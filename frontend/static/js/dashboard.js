@@ -495,6 +495,13 @@ class PrintTrackingDashboard {
 
     showLoading() {
         const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+        const modalElement = document.getElementById('loadingModal');
+
+        // Remove aria-hidden when modal is shown to fix accessibility warning
+        modalElement.addEventListener('shown.bs.modal', function () {
+            modalElement.removeAttribute('aria-hidden');
+        });
+
         loadingModal.show();
     }
 
@@ -674,6 +681,16 @@ class PrintTrackingDashboard {
             const user = await this.fetchWithAuth(`/users/${userId}`);
             const history = await this.fetchWithAuth(`/users/${userId}/print-history?limit=10`);
 
+            // Handle case where history might be null due to API error
+            const stats = history?.statistics || {
+                total_jobs: 0,
+                total_pages: 0,
+                color_pages: 0,
+                bw_pages: 0
+            };
+
+            const printJobs = history?.print_jobs || [];
+
             const modalHtml = `
                 <div class="modal fade" id="viewUserModal" tabindex="-1">
                     <div class="modal-dialog modal-lg">
@@ -699,10 +716,10 @@ class PrintTrackingDashboard {
                                     <div class="col-md-6">
                                         <h6>Print Statistics</h6>
                                         <table class="table table-sm">
-                                            <tr><td><strong>Total Jobs:</strong></td><td>${history.statistics.total_jobs}</td></tr>
-                                            <tr><td><strong>Total Pages:</strong></td><td>${history.statistics.total_pages}</td></tr>
-                                            <tr><td><strong>Color Pages:</strong></td><td>${history.statistics.color_pages}</td></tr>
-                                            <tr><td><strong>B&W Pages:</strong></td><td>${history.statistics.bw_pages}</td></tr>
+                                            <tr><td><strong>Total Jobs:</strong></td><td>${stats.total_jobs}</td></tr>
+                                            <tr><td><strong>Total Pages:</strong></td><td>${stats.total_pages}</td></tr>
+                                            <tr><td><strong>Color Pages:</strong></td><td>${stats.color_pages}</td></tr>
+                                            <tr><td><strong>B&W Pages:</strong></td><td>${stats.bw_pages}</td></tr>
                                         </table>
                                     </div>
                                 </div>
@@ -719,7 +736,7 @@ class PrintTrackingDashboard {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            ${history.print_jobs.map(job => `
+                                            ${printJobs.map(job => `
                                                 <tr>
                                                     <td>${job.document_name}</td>
                                                     <td>${job.printer_name}</td>

@@ -223,7 +223,7 @@ class UserService:
             func.coalesce(func.sum(PrintJob.color_pages), 0)
         ).scalar() or 0
         
-        bw_pages = total_pages - color_pages
+        bw_pages = max(0, int(total_pages) - int(color_pages))
         
         # Get paginated results
         print_jobs = query.order_by(desc(PrintJob.print_time)).offset(skip).limit(limit).all()

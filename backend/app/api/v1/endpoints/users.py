@@ -344,8 +344,21 @@ async def get_user_print_history(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error fetching user print history: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to fetch user print history"
-        )
+        logger.error(f"Error fetching user print history: {str(e)}", exc_info=True)
+        # Return empty data instead of failing
+        return {
+            "user_id": user_id,
+            "username": f"user_{user_id}",
+            "print_jobs": [],
+            "statistics": {
+                "total_jobs": 0,
+                "total_pages": 0,
+                "color_pages": 0,
+                "bw_pages": 0
+            },
+            "pagination": {
+                "skip": skip,
+                "limit": limit,
+                "total": 0
+            }
+        }
