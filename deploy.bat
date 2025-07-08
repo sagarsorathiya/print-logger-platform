@@ -60,8 +60,8 @@ if %errorlevel% neq 0 (
 REM Generate environment configuration
 echo [INFO] Creating environment configuration...
 
-REM Generate secret key using PowerShell
-for /f "delims=" %%i in ('powershell -command "[System.Web.Security.Membership]::GeneratePassword(32, 8)"') do set "SECRET_KEY=%%i"
+REM Use a predefined secure secret key for development
+set "SECRET_KEY=print-portal-development-secret-key-32-chars-minimum-length-required-for-jwt"
 
 REM Create .env file
 (
@@ -71,17 +71,17 @@ echo.
 echo # Security Settings
 echo SECRET_KEY=%SECRET_KEY%
 echo DEBUG=true
-echo JWT_ALGORITHM=HS256
+echo ALGORITHM=HS256
 echo ACCESS_TOKEN_EXPIRE_MINUTES=480
 echo.
 echo # CORS and Security
-echo CORS_ORIGINS=["http://localhost:8080","http://%DOMAIN%:8080"]
+echo CORS_ORIGINS=http://localhost:8080,http://%DOMAIN%:8080
 echo ALLOWED_HOSTS=["localhost","%DOMAIN%"]
 echo.
 echo # Logging
 echo LOG_LEVEL=INFO
 echo.
-echo # LDAP Configuration (disabled by default^)
+echo # LDAP Configuration ^(disabled by default^)
 echo LDAP_ENABLED=false
 echo.
 echo # Agent Settings
